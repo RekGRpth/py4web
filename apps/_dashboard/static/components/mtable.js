@@ -1,13 +1,16 @@
 (function(){
 
-    var mtable = { props: ['url', 'filter', 'order', 'editable', 'deletable', 'render'], data: null, methods: {}};
+    var mtable = { props: ['url', 'filter', 'order', 'editable', 'create', 'deletable', 'render'], data: null, methods: {}};
     
     mtable.data = function() {        
         var data = {url: this.url,
+                    busy: false,
                     filter: this.filter || '',
                     order: this.order ||  '',
                     errors: {},
                     item: null,
+                    message: '',
+                    reference_options: {},
                     table: { model: [], items: [], count: 0}};
         mtable.methods.load.call(data);
         return data;
@@ -46,7 +49,9 @@
             });
         if (filters.length) url += '&'+filters.join('&');
         if (self.order) url += '&@order='+self.order;
+        self.busy = true;
         axios.get(url).then(function (res) {
+                self.busy = false;
                 if(!length) self.table = res.data; 
                 else self.table.items = self.table.items.concat(res.data.items);
             });
@@ -59,18 +64,56 @@
         this.table.items = [];
         this.load();
     };
-    
-    mtable.methods.open_create = function () {
+
+    mtable.methods.clear = function() {
         this.errors = {};
+        this.item = null;
+        this.message = '';
+    }
+
+    mtable.methods.open_create = function () {
+        this.populate_reference_options();
         this.item = {};
         for(var field in this.model) this.item[field.name] = field.default||'';
     };
     
     mtable.methods.open_edit = function (item) {
-        this.errors = {};
+        this.populate_reference_options();
+        this.item = {};
         this.item = item;
     };
-    
+
+    mtable.methods.populate_reference_options = function(){
+        let self = this;
+        for(var field of this.table.model){
+            console.log(field.name);
+            if(field.type == "reference"){
+                if (!(field.references in this.reference_options)){
+                    Vue.set(this.reference_options, field.references, []);
+                    let reference_table_url = self.url.split('/');                    
+                    reference_table_url.pop()
+                    reference_table_url.push(field.references)
+                    reference_table_url = reference_table_url.join('/') + '?@options_list=true';
+                    axios.get(reference_table_url).then(function (res) {
+                        let url_components = res.config.url.split('?')[0].split('/');
+                        self.reference_options[url_components[url_components.length - 1 ]] = res.data.items;
+                     });
+                    
+                }
+            }
+        }
+    }
+
+    mtable.methods.parse_and_validate_json = function(event){
+        try {
+            event.target.style.borderColor = "";
+            return JSON.parse(event.target.value);
+        }
+        catch{
+            event.target.style.borderColor = "#ff0000";
+        }
+    }
+
     mtable.methods.trash = function (item) {
         if (window.confirm("Really delete record?")) {
             let url = this.url + '/' + item.id;            
@@ -82,21 +125,45 @@
     
     mtable.methods.save = function (item) {
         let url = this.url;
+        self.busy = true;
         if (item.id) {
             url += '/' + item.id;
-            axios.put(url, item);
+            axios.put(url, item).then(mtable.handle_response('put', this),
+                                      mtable.handle_response('put', this));
         } else {
-            axios.post(url);
+            axios.post(url, item).then(mtable.handle_response('post', this),
+                                       mtable.handle_response('post', this));
         }
-        this.item = null;
     };
-    
+
+    mtable.handle_response = function(method, data) {
+        self.busy = false;
+        return function(res) {
+            if (res.response) res = res.response; // deal with error weirdness
+            if (method == 'post') {
+                data.table.items = [];
+                console.log(data);
+                mtable.methods.load.call(data);
+            }
+            console.log('a');
+            console.log(res);
+            if (res.data.status == 'success') {
+                data.clear();
+            } else {
+                console.log('b')
+                data.errors = res.data.errors;
+                data.message = res.data.message;
+            }
+            console.log('c');
+        };
+    };
+
     mtable.methods.close = function () {
-        this.item = null;
+        this.clear();
     };
     
     mtable.methods.search = function () { 
-        this.item = null;
+        this.clear();
         this.table.items = [];
         this.table.count = 0;
         this.load();
@@ -119,7 +186,12 @@
         window.location = window.location.href.split('?')[0]+'?'+source;
     };
 
-    utils.register_vue_component('mtable', 'components/mtable.html', function(template) {        
+
+
+    var scripts = document.getElementsByTagName('script');
+    var src = scripts[scripts.length-1].src;
+    var path = src.substr(0, src.length-3) + '.html';
+    Q.register_vue_component('mtable', path, function(template) {        
             mtable.template = template.data;
             return mtable;
         });

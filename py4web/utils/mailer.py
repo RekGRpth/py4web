@@ -2,8 +2,9 @@
 # -*- coding: utf-8 -*-
 
 """
-This file was extracted from the web2py Web Framework
-License: BSDv3
+| This file is part of the py4web Web Framework
+| Copyrighted by Massimo Di Pierro <mdipierro@cs.depaul.edu>
+| License: "BSDv3" (https://opensource.org/licenses/BSD-3-Clause)
 """
 
 from __future__ import print_function
@@ -19,6 +20,7 @@ from pydal._compat import *
 
 try:
     from google.appengine.api import mail as google_mail
+
     GAE = True
 except ImportError:
     GAE = False
@@ -34,10 +36,12 @@ try:
 except ImportError:
     pyme = None
 
-class Settings(object):
+
+class Settings:
     pass
 
-class Mailer(object):
+
+class Mailer:
     """
     Class for configuring and sending emails with alternative text / html
     body, multiple attachments and encryption support
@@ -110,7 +114,7 @@ class Mailer(object):
             mail = Mailer('example.com:25', 'me@example.com', 'me:password')
 
     Notice for GAE users:
-        attachments have an automatic content_id='attachment-i' where i is progressive number
+        Attachments have an automatic content_id='attachment-i' where i is progressive number
         in this way the can be referenced from the HTML as <img src="cid:attachment-0" /> etc.
     """
 
@@ -168,15 +172,16 @@ class Mailer(object):
             filename=None,
             content_id=None,
             content_type=None,
-                encoding='utf-8'):
+            encoding="utf-8",
+        ):
             if isinstance(payload, str):
                 if filename is None:
                     filename = os.path.basename(payload)
-                with open(payload, 'rb') as fp:                    
+                with open(payload, "rb") as fp:
                     payload = fp.read()
             else:
                 if filename is None:
-                    raise Exception('Missing attachment name')
+                    raise Exception("Missing attachment name")
                 payload = payload.read()
             # FIXME PY3 can be used to_native?
             filename = filename.encode(encoding)
@@ -184,14 +189,16 @@ class Mailer(object):
                 content_type = mimetypes.guess_type(filename)
             self.my_filename = filename
             self.my_payload = payload
-            MIMEBase.__init__(self, *content_type.split('/', 1))
+            MIMEBase.__init__(self, *content_type.split("/", 1))
             self.set_payload(payload)
-            self['Content-Disposition'] = 'attachment; filename="%s"' % to_native(filename, encoding)
+            self["Content-Disposition"] = 'attachment; filename="%s"' % to_native(
+                filename, encoding
+            )
             if content_id is not None:
-                self['Content-Id'] = '<%s>' % to_native(content_id, encoding)
+                self["Content-Id"] = "<%s>" % to_native(content_id, encoding)
             Encoders.encode_base64(self)
 
-    def __init__(self, server=None, sender=None, login=None, tls=True):
+    def __init__(self, server=None, sender=None, login=None, tls=True, ssl=False):
 
         settings = self.settings = Settings()
         settings.logger = logging
@@ -201,7 +208,7 @@ class Mailer(object):
         settings.tls = tls
         settings.timeout = 5  # seconds
         settings.hostname = None
-        settings.ssl = False
+        settings.ssl = ssl
         settings.cipher_type = None
         settings.gpg_home = None
         settings.sign = True
@@ -215,29 +222,30 @@ class Mailer(object):
         settings.debug = False
         self.result = {}
 
-    def send(self,
-             to,
-             subject='[no subject]',
-             body='[no body]',
-             sender=None,
-             attachments=None,
-             cc=None,
-             bcc=None,
-             reply_to=None,
-             encoding='utf-8',
-             raw=False,
-             headers={},
-             from_address=None,
-             cipher_type=None,
-             sign=None,
-             sign_passphrase=None,
-             encrypt=None,
-             x509_sign_keyfile=None,
-             x509_sign_chainfile=None,
-             x509_sign_certfile=None,
-             x509_crypt_certfiles=None,
-             x509_nocerts=None
-             ):
+    def send(
+        self,
+        to,
+        subject="[no subject]",
+        body="[no body]",
+        sender=None,
+        attachments=None,
+        cc=None,
+        bcc=None,
+        reply_to=None,
+        encoding="utf-8",
+        raw=False,
+        headers={},
+        from_address=None,
+        cipher_type=None,
+        sign=None,
+        sign_passphrase=None,
+        encrypt=None,
+        x509_sign_keyfile=None,
+        x509_sign_chainfile=None,
+        x509_sign_certfile=None,
+        x509_crypt_certfiles=None,
+        x509_nocerts=None,
+    ):
         """
         Sends an email using data specified in constructor
 
@@ -341,15 +349,15 @@ class Mailer(object):
         """
 
         # We don't want to use base64 encoding for unicode mail
-        add_charset('utf-8', charset_QP, charset_QP, 'utf-8')
+        add_charset("utf-8", charset_QP, charset_QP, "utf-8")
 
         def encode_header(key):
             if [c for c in key if 32 > ord(c) or ord(c) > 127]:
-                return Header(key.encode('utf-8'), 'utf-8')
+                return Header(key.encode("utf-8"), "utf-8")
             else:
                 return key
 
-        # encoded or raw text
+        # Encoded or raw text
         def encoded_or_raw(text):
             if raw:
                 text = encode_header(text)
@@ -358,21 +366,21 @@ class Mailer(object):
         sender = sender or self.settings.sender
 
         if not isinstance(self.settings.server, str):
-            raise Exception('Server address not specified')
+            raise Exception("Server address not specified")
         if not isinstance(sender, str):
-            raise Exception('Sender address not specified')
+            raise Exception("Sender address not specified")
 
         if not raw and attachments:
             # Use multipart/mixed if there is attachments
-            payload_in = MIMEMultipart('mixed')
+            payload_in = MIMEMultipart("mixed")
         elif raw:
-            # no encoding configuration for raw messages
+            # No encoding configuration for raw messages
             if not isinstance(body, basestring):
                 body = body.read()
             if isinstance(body, unicodeT):
-                text = body.encode('utf-8')
-            elif not encoding == 'utf-8':
-                text = body.decode(encoding).encode('utf-8')
+                text = body.encode("utf-8")
+            elif not encoding == "utf-8":
+                text = body.decode(encoding).encode("utf-8")
             else:
                 text = body
             # No charset passed to avoid transport encoding
@@ -383,7 +391,7 @@ class Mailer(object):
             if not isinstance(to, (list, tuple)):
                 to = [to]
         else:
-            raise Exception('Target receiver address not specified')
+            raise Exception("Target receiver address not specified")
         if cc:
             if not isinstance(cc, (list, tuple)):
                 cc = [cc]
@@ -394,9 +402,8 @@ class Mailer(object):
             text = html = None
         elif isinstance(body, (list, tuple)):
             text, html = body
-        elif body.strip().startswith('<html') and \
-                body.strip().endswith('</html>'):
-            text = self.settings.server == 'gae' and body or None
+        elif body.strip().startswith("<html") and body.strip().endswith("</html>"):
+            text = self.settings.server == "gae" and body or None
             html = body
         else:
             text = body
@@ -408,30 +415,30 @@ class Mailer(object):
                 if not isinstance(text, basestring):
                     text = text.read()
                 if isinstance(text, unicodeT):
-                    text = text.encode('utf-8')
-                elif not encoding == 'utf-8':
-                    text = text.decode(encoding).encode('utf-8')
+                    text = text.encode("utf-8")
+                elif not encoding == "utf-8":
+                    text = text.decode(encoding).encode("utf-8")
             if html is not None:
                 if not isinstance(html, basestring):
                     html = html.read()
                 if isinstance(html, unicodeT):
-                    html = html.encode('utf-8')
-                elif not encoding == 'utf-8':
-                    html = html.decode(encoding).encode('utf-8')
+                    html = html.encode("utf-8")
+                elif not encoding == "utf-8":
+                    html = html.decode(encoding).encode("utf-8")
 
             # Construct mime part only if needed
             if text is not None and html:
                 # We have text and html we need multipart/alternative
-                attachment = MIMEMultipart('alternative')
-                attachment.attach(MIMEText(text, _charset='utf-8'))
-                attachment.attach(MIMEText(html, 'html', _charset='utf-8'))
+                attachment = MIMEMultipart("alternative")
+                attachment.attach(MIMEText(text, _charset="utf-8"))
+                attachment.attach(MIMEText(html, "html", _charset="utf-8"))
             elif text is not None:
-                attachment = MIMEText(text, _charset='utf-8')
+                attachment = MIMEText(text, _charset="utf-8")
             elif html:
-                attachment = MIMEText(html, 'html', _charset='utf-8')
+                attachment = MIMEText(html, "html", _charset="utf-8")
 
             if attachments:
-                # If there is attachments put text and html into
+                # If there are attachments put text and html into
                 # multipart/mixed
                 payload_in.attach(attachment)
             else:
@@ -457,51 +464,56 @@ class Mailer(object):
         #######################################################
         #                       GPGME                         #
         #######################################################
-        if cipher_type == 'gpg':
+        if cipher_type == "gpg":
             if self.settings.gpg_home:
                 # Set GNUPGHOME environment variable to set home of gnupg
                 import os
-                os.environ['GNUPGHOME'] = self.settings.gpg_home
+
+                os.environ["GNUPGHOME"] = self.settings.gpg_home
             if not sign and not encrypt:
-                raise RuntimeError("No sign and no encrypt is set but cipher type to gpg")
+                raise RuntimeError(
+                    "No sign and no encrypt is set but cipher type to gpg"
+                )
             if not pyme:
-                raise RuntimeError('pyme not installed')
+                raise RuntimeError("pyme not installed")
             ############################################
             #                   sign                   #
             ############################################
             if sign:
                 import string
+
                 core.check_version(None)
-                pin = payload_in.as_string().replace('\n', '\r\n')
+                pin = payload_in.as_string().replace("\n", "\r\n")
                 plain = core.Data(pin)
                 sig = core.Data()
                 c = core.Context()
                 c.set_armor(1)
                 c.signers_clear()
-                # search for signing key for From:
+                # Search for signing key for From:
                 for sigkey in c.op_keylist_all(sender, 1):
                     if sigkey.can_sign:
                         c.signers_add(sigkey)
                 if not c.signers_enum(0):
-                    raise RuntimeError('No key for signing [%s]' % sender)
+                    raise RuntimeError("No key for signing [%s]" % sender)
                 c.set_passphrase_cb(lambda x, y, z: sign_passphrase)
                 try:
-                    # make a signature
+                    # Make a signature
                     c.op_sign(plain, sig, pyme_mode.DETACH)
                     sig.seek(0, 0)
-                    # make it part of the email
-                    payload = MIMEMultipart('signed',
-                                            boundary=None,
-                                            _subparts=None,
-                                            **dict(micalg="pgp-sha1",
-                                                   protocol="application/pgp-signature"))
-                    # insert the origin payload
+                    # Make it part of the email
+                    payload = MIMEMultipart(
+                        "signed",
+                        boundary=None,
+                        _subparts=None,
+                        **dict(micalg="pgp-sha1", protocol="application/pgp-signature")
+                    )
+                    # Insert the origin payload
                     payload.attach(payload_in)
-                    # insert the detached signature
-                    p = MIMEBase("application", 'pgp-signature')
+                    # Insert the detached signature
+                    p = MIMEBase("application", "pgp-signature")
                     p.set_payload(sig.read())
                     payload.attach(p)
-                    # it's just a trick to handle the no encryption case
+                    # It's just a trick to handle the no encryption case
                     payload_in = payload
                 except errors.GPGMEError as ex:
                     raise RuntimeError("GPG error: %s" % ex.getstring())
@@ -515,7 +527,7 @@ class Mailer(object):
                 cipher = core.Data()
                 c = core.Context()
                 c.set_armor(1)
-                # collect the public keys for encryption
+                # Collect the public keys for encryption
                 recipients = []
                 rec = to[:]
                 if cc:
@@ -526,21 +538,23 @@ class Mailer(object):
                     c.op_keylist_start(addr, 0)
                     r = c.op_keylist_next()
                     if r is None:
-                        raise RuntimeError('No key for [%s]' % addr)
+                        raise RuntimeError("No key for [%s]" % addr)
                     recipients.append(r)
                 try:
-                    # make the encryption
+                    # Make the encryption
                     c.op_encrypt(recipients, 1, plain, cipher)
                     cipher.seek(0, 0)
-                    # make it a part of the email
-                    payload = MIMEMultipart('encrypted',
-                                            boundary=None,
-                                            _subparts=None,
-                                            **dict(protocol="application/pgp-encrypted"))
-                    p = MIMEBase("application", 'pgp-encrypted')
+                    # Make it a part of the email
+                    payload = MIMEMultipart(
+                        "encrypted",
+                        boundary=None,
+                        _subparts=None,
+                        **dict(protocol="application/pgp-encrypted")
+                    )
+                    p = MIMEBase("application", "pgp-encrypted")
                     p.set_payload("Version: 1\r\n")
                     payload.attach(p)
-                    p = MIMEBase("application", 'octet-stream')
+                    p = MIMEBase("application", "octet-stream")
                     p.set_payload(cipher.read())
                     payload.attach(p)
                 except errors.GPGMEError as ex:
@@ -549,24 +563,35 @@ class Mailer(object):
         #######################################################
         #                       X.509                         #
         #######################################################
-        elif cipher_type == 'x509':
+        elif cipher_type == "x509":
             if not sign and not encrypt:
-                raise RuntimeError("No sign and no encrypt is set but cipher type to x509")
+                raise RuntimeError(
+                    "No sign and no encrypt have been set but cipher type set to x509"
+                )
 
             import os
+
             x509_sign_keyfile = x509_sign_keyfile or self.settings.x509_sign_keyfile
 
-            x509_sign_chainfile = x509_sign_chainfile or self.settings.x509_sign_chainfile
+            x509_sign_chainfile = (
+                x509_sign_chainfile or self.settings.x509_sign_chainfile
+            )
 
-            x509_sign_certfile = x509_sign_certfile or self.settings.x509_sign_certfile or \
-                x509_sign_keyfile or self.settings.x509_sign_certfile
+            x509_sign_certfile = (
+                x509_sign_certfile
+                or self.settings.x509_sign_certfile
+                or x509_sign_keyfile
+                or self.settings.x509_sign_certfile
+            )
 
             # crypt certfiles could be a string or a list
-            x509_crypt_certfiles = x509_crypt_certfiles or self.settings.x509_crypt_certfiles
+            x509_crypt_certfiles = (
+                x509_crypt_certfiles or self.settings.x509_crypt_certfiles
+            )
 
             x509_nocerts = x509_nocerts or self.settings.x509_nocerts
 
-            # need m2crypto
+            # Missing needed m2crypto
             if not M2Crypto:
                 raise RuntimeError("Can't load M2Crypto module")
             BIO, SMIME, X509 = M2Crypto.BIO, M2Crypto.SMIME, M2Crypto.X509
@@ -576,25 +601,37 @@ class Mailer(object):
 
             # SIGN
             if sign:
-                # key for signing
+                # Key for signing
                 try:
-                    keyfile_bio = BIO.openfile(x509_sign_keyfile)\
-                        if os.path.isfile(x509_sign_keyfile)\
+                    keyfile_bio = (
+                        BIO.openfile(x509_sign_keyfile)
+                        if os.path.isfile(x509_sign_keyfile)
                         else BIO.MemoryBuffer(x509_sign_keyfile)
-                    sign_certfile_bio = BIO.openfile(x509_sign_certfile)\
-                        if os.path.isfile(x509_sign_certfile)\
+                    )
+                    sign_certfile_bio = (
+                        BIO.openfile(x509_sign_certfile)
+                        if os.path.isfile(x509_sign_certfile)
                         else BIO.MemoryBuffer(x509_sign_certfile)
-                    s.load_key_bio(keyfile_bio, sign_certfile_bio,
-                                   callback=lambda x: sign_passphrase)
+                    )
+                    s.load_key_bio(
+                        keyfile_bio,
+                        sign_certfile_bio,
+                        callback=lambda x: sign_passphrase,
+                    )
                     if x509_sign_chainfile:
                         sk = X509.X509_Stack()
-                        chain = X509.load_cert(x509_sign_chainfile)\
-                            if os.path.isfile(x509_sign_chainfile)\
+                        chain = (
+                            X509.load_cert(x509_sign_chainfile)
+                            if os.path.isfile(x509_sign_chainfile)
                             else X509.load_cert_string(x509_sign_chainfile)
+                        )
                         sk.push(chain)
                         s.set_x509_stack(sk)
                 except Exception as e:
-                    raise RuntimeError("Something went wrong on certificate / private key loading: <%s>" % str(e))
+                    raise RuntimeError(
+                        "Something went wrong with certificate or private key loading: <%s>"
+                        % str(e)
+                    )
 
                 try:
                     if x509_nocerts:
@@ -604,11 +641,14 @@ class Mailer(object):
                     if not encrypt:
                         flags += SMIME.PKCS7_DETACHED
                     p7 = s.sign(msg_bio, flags=flags)
-                    msg_bio = BIO.MemoryBuffer(payload_in.as_string(
-                    ))  # Recreate coz sign() has consumed it.
+                    msg_bio = BIO.MemoryBuffer(
+                        payload_in.as_string()
+                    )  # Recreate coz sign() has consumed it.
                 except Exception as e:
-                    raise RuntimeError("Something went wrong on signing: <%s> %s" % (
-                        str(e), str(flags)))
+                    raise RuntimeError(
+                        "Something went wrong with signing: <%s> %s"
+                        % (str(e), str(flags))
+                    )
 
             # ENCRYPT
             if encrypt:
@@ -617,15 +657,17 @@ class Mailer(object):
                     if not isinstance(x509_crypt_certfiles, (list, tuple)):
                         x509_crypt_certfiles = [x509_crypt_certfiles]
 
-                    # make an encryption cert's stack
+                    # Make an encryption certificate's stack
                     for crypt_certfile in x509_crypt_certfiles:
-                        certfile = X509.load_cert(crypt_certfile)\
-                            if os.path.isfile(crypt_certfile)\
+                        certfile = (
+                            X509.load_cert(crypt_certfile)
+                            if os.path.isfile(crypt_certfile)
                             else X509.load_cert_string(crypt_certfile)
+                        )
                         sk.push(certfile)
                     s.set_x509_stack(sk)
 
-                    s.set_cipher(SMIME.Cipher('des_ede3_cbc'))
+                    s.set_cipher(SMIME.Cipher("des_ede3_cbc"))
                     tmp_bio = BIO.MemoryBuffer()
                     if sign:
                         s.write(tmp_bio, p7)
@@ -633,9 +675,11 @@ class Mailer(object):
                         tmp_bio.write(payload_in.as_string())
                     p7 = s.encrypt(tmp_bio)
                 except Exception as e:
-                    raise RuntimeError("Something went wrong on encrypting: <%s>" % str(e))
+                    raise RuntimeError(
+                        "Something went wrong with encrypting: <%s>" % str(e)
+                    )
 
-            # Final stage in sign and encryption
+            # Final stage: Sign and Encrypt
             out = BIO.MemoryBuffer()
             if encrypt:
                 s.write(out, p7)
@@ -643,88 +687,107 @@ class Mailer(object):
                 if sign:
                     s.write(out, p7, msg_bio, SMIME.PKCS7_DETACHED)
                 else:
-                    out.write('\r\n')
+                    out.write("\r\n")
                     out.write(payload_in.as_string())
             out.close()
             st = str(out.read())
             payload = message_from_string(st)
         else:
-            # no cryptography process as usual
+            # No cryptography process as usual
             payload = payload_in
 
         if from_address:
-            payload['From'] = encoded_or_raw(to_unicode(from_address, encoding))
+            payload["From"] = encoded_or_raw(to_unicode(from_address, encoding))
         else:
-            payload['From'] = encoded_or_raw(to_unicode(sender, encoding))
+            payload["From"] = encoded_or_raw(to_unicode(sender, encoding))
         origTo = to[:]
         if to:
-            payload['To'] = encoded_or_raw(to_unicode(', '.join(to), encoding))
+            payload["To"] = encoded_or_raw(to_unicode(", ".join(to), encoding))
         if reply_to:
-            payload['Reply-To'] = encoded_or_raw(to_unicode(reply_to, encoding))
+            payload["Reply-To"] = encoded_or_raw(to_unicode(reply_to, encoding))
         if cc:
-            payload['Cc'] = encoded_or_raw(to_unicode(', '.join(cc), encoding))
+            payload["Cc"] = encoded_or_raw(to_unicode(", ".join(cc), encoding))
             to.extend(cc)
         if bcc:
             to.extend(bcc)
-        payload['Subject'] = encoded_or_raw(to_unicode(subject, encoding))
-        payload['Date'] = email.utils.formatdate()
+        payload["Subject"] = encoded_or_raw(to_unicode(subject, encoding))
+        payload["Date"] = email.utils.formatdate()
         for k, v in iteritems(headers):
             payload[k] = encoded_or_raw(to_unicode(v, encoding))
         result = {}
         try:
-            if self.settings.server == 'logging':
-                entry = 'email not sent\n%s\nFrom: %s\nTo: %s\nSubject: %s\n\n%s\n%s\n' % \
-                    ('-' * 40, sender, ', '.join(to), subject, text or html, '-' * 40)
+            if self.settings.server == "logging":
+                entry = (
+                    "email not sent\n%s\nFrom: %s\nTo: %s\nSubject: %s\n\n%s\n%s\n"
+                    % ("-" * 40, sender, ", ".join(to), subject, text or html, "-" * 40)
+                )
                 self.settings.logger.warning(entry)
-            elif self.settings.server.startswith('logging:'):
-                entry = 'email not sent\n%s\nFrom: %s\nTo: %s\nSubject: %s\n\n%s\n%s\n' % \
-                    ('-' * 40, sender, ', '.join(to), subject, text or html, '-' * 40)
-                open(self.settings.server[8:], 'a').write(entry)
-            elif self.settings.server == 'gae':
+            elif self.settings.server.startswith("logging:"):
+                entry = (
+                    "email not sent\n%s\nFrom: %s\nTo: %s\nSubject: %s\n\n%s\n%s\n"
+                    % ("-" * 40, sender, ", ".join(to), subject, text or html, "-" * 40)
+                )
+                open(self.settings.server[8:], "a").write(entry)
+            elif self.settings.server == "gae":
                 if not GAE:
-                    raise RuntimeError('Not running on GAE')
+                    raise RuntimeError("Not running on GAE")
                 xcc = dict()
                 if cc:
-                    xcc['cc'] = cc
+                    xcc["cc"] = cc
                 if bcc:
-                    xcc['bcc'] = bcc
+                    xcc["bcc"] = bcc
                 if reply_to:
-                    xcc['reply_to'] = reply_to
-                
-                attachments = attachments and [google_mail.Attachment(
-                    a.my_filename,
-                    a.my_payload,
-                    content_id='<attachment-%s>' % k
-                ) for k, a in enumerate(attachments) if not raw]
+                    xcc["reply_to"] = reply_to
+
+                attachments = attachments and [
+                    google_mail.Attachment(
+                        a.my_filename, a.my_payload, content_id="<attachment-%s>" % k
+                    )
+                    for k, a in enumerate(attachments)
+                    if not raw
+                ]
                 if attachments:
                     result = google_mail.send_mail(
-                        sender=sender, to=origTo,
+                        sender=sender,
+                        to=origTo,
                         subject=to_unicode(subject, encoding),
-                        body=to_unicode(text or '', encoding),
+                        body=to_unicode(text or "", encoding),
                         html=html,
-                        attachments=attachments, **xcc)
+                        attachments=attachments,
+                        **xcc
+                    )
                 elif html and (not raw):
                     result = google_mail.send_mail(
-                        sender=sender, to=origTo,
-                        subject=to_unicode(subject, encoding), body=to_unicode(text or '', encoding), html=html, **xcc)
+                        sender=sender,
+                        to=origTo,
+                        subject=to_unicode(subject, encoding),
+                        body=to_unicode(text or "", encoding),
+                        html=html,
+                        **xcc
+                    )
                 else:
                     result = google_mail.send_mail(
-                        sender=sender, to=origTo,
-                        subject=to_unicode(subject, encoding), body=to_unicode(text or '', encoding), **xcc)
-            elif self.settings.server == 'aws':
+                        sender=sender,
+                        to=origTo,
+                        subject=to_unicode(subject, encoding),
+                        body=to_unicode(text or "", encoding),
+                        **xcc
+                    )
+            elif self.settings.server == "aws":
                 import boto3
                 from botocore.exceptions import ClientError
-                client = boto3.client('ses')
+
+                client = boto3.client("ses")
                 try:
-                    raw = {'Data': payload.as_string()}
-                    response = client.send_raw_email(RawMessage=raw,
-                                                     Source=sender,
-                                                     Destinations=to)
+                    raw = {"Data": payload.as_string()}
+                    response = client.send_raw_email(
+                        RawMessage=raw, Source=sender, Destinations=to
+                    )
                     return True
                 except ClientError as e:
                     raise RuntimeError()
             else:
-                smtp_args = self.settings.server.split(':')
+                smtp_args = self.settings.server.split(":")
                 kwargs = dict(timeout=self.settings.timeout)
                 func = smtplib.SMTP_SSL if self.settings.ssl else smtplib.SMTP
                 server = func(*smtp_args, **kwargs)
@@ -734,12 +797,21 @@ class Mailer(object):
                         server.starttls()
                         server.ehlo(self.settings.hostname)
                     if self.settings.login:
-                        server.login(*self.settings.login.split(':', 1))
+                        server.login(*self.settings.login.split(":", 1))
                     result = server.sendmail(sender, to, payload.as_string())
                 finally:
-                    server.quit()
+                    # do not want to hide errors raising some exception here
+                    try:
+                        server.quit()
+                    except:
+                        pass
+                    # ensure to close any socket with SMTP server
+                    try:
+                        server.close()
+                    except:
+                        pass
         except Exception as e:
-            self.settings.logger.warning('Mailer.send failure:%s' % e)
+            self.settings.logger.warning("Mailer.send failure:%s" % e)
             self.result = result
             raise
         self.result = result

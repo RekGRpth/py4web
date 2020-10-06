@@ -37,9 +37,15 @@ apps/*
 !apps/_documentation/*
 !apps/superheroes
 !apps/superheroes/*
+!apps/myfeed
+!apps/myfeed/*
 !apps/*/databases/README*
 apps/*/databases/*
 apps/*/uploads/*
 apps/*/*.py[oc]
 packages/
 logs/
+password.txt
+deployment_tools/gae/lib
+deployment_tools/gae/apps
+py4web/assets

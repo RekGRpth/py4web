@@ -40,9 +40,15 @@ policy.set('*', 'PUT', authorize=False)
 policy.set('*', 'POST', authorize=False)
 policy.set('*', 'DELETE', authorize=False)
 
-def api():
-    return RestPI(db, policy)(request.method, request.args(0), request.args(1),
-                             request.get_vars, request.post_vars)
+@action('api/<tablename>/')
+@action('api/<tablename>/<rec_id>')
+def api(tablename, rec_id=None):
+    return RestAPI(db, policy)(request.method, 
+                               tablename, 
+                               rec_id,
+                               request.GET, 
+                               request.POST
+                               )
 ``
 
 The policy is per table (or * for all tables and per method. authorize can be True (allow), False (deny) or a function with the signature (method, tablename, record_id, get_vars, post_vars) which returns True/False. For the GET policy one can specify a list of allowed query patterns (* for all). A query pattern will be matched against the keys in the query string.
@@ -50,7 +56,7 @@ The policy is per table (or * for all tables and per method. authorize can be Tr
 The above action is exposed as:
 
 ``
-/superheroes/rest/api.json/{tablename}
+/superheroes/rest/api/{tablename}
 ``    
 
 In our example policy we disabled all methods but GET.
@@ -64,21 +70,21 @@ The general query has the form ``{something}.eq=value`` where ``eq=`` stands for
 
 **All superheroes called "Superman"**
 ``
-/superheroes/rest/api.json/superhero?name.eq=Superman
+/superheroes/rest/api/superhero?name.eq=Superman
 ``
 
 It can be a the name of a field of a table referred by the table been queried as in:
 
-**All superheroes with real identity "Clark Kent**
+**All superheroes with real identity "Clark Kent"**
 ``
-/superheroes/rest/api.json/superhero?real_identity.name.eq=Clark Kent
+/superheroes/rest/api/superhero?real_identity.name.eq=Clark Kent
 ``
 
 It can be the name of a field of a table that refers to the table neen queried as in:
 
 **All superheroes with any tag superpower with strength > 90**
 ``
-/superheroes/rest/api.json/superhero?superhero.tag.strength.gt=90
+/superheroes/rest/api/superhero?superhero.tag.strength.gt=90
 ``
 
 (here tag is the name of the link table, the preceding ``superhero`` is the name of the field that refers to the selected table and ``strength`` is the name of the field used to filter)
@@ -87,7 +93,7 @@ It can also be a field of the table referenced by a many-to-many linked table as
 
 **All superheroes with the flight power**
 ``
-/superheroes/rest/api.json/superhero?superhero.tag.superpower.description.eq=Flight
+/superheroes/rest/api/superhero?superhero.tag.superpower.description.eq=Flight
 ``
 
 The key to understand the syntax above is to break it as follows:
@@ -104,7 +110,7 @@ select records of table **superhero** referred by field **superhero** of table *
 
 The query allows additional modifiers for example
 ``
-@offest=10
+@offset=10
 @limit=10
 @order=name
 @model=true
@@ -117,7 +123,7 @@ Lookup denormalizes the linked field.
 Here are some practical examples:
 
 URL:
-``/superheroes/rest/api.json/superhero``
+``/superheroes/rest/api/superhero``
 
 OUTPUT:
 ``
@@ -148,7 +154,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?@model=true``
+``
+/superheroes/rest/api/superhero?@model=true
+``
 
 OUTPUT:
 ``
@@ -219,7 +227,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?@lookup=real_identity``
+``
+/superheroes/rest/api/superhero?@lookup=real_identity
+``
 
 OUTPUT:
 ``
@@ -262,7 +272,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?@lookup=identity:real_identity``
+``
+/superheroes/rest/api/superhero?@lookup=identity:real_identity
+``
 
 (denormalize the real_identity and rename it identity)
 
@@ -310,7 +322,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?@lookup=identity!:real_identity[name,job]``
+``
+/superheroes/rest/api/superhero?@lookup=identity!:real_identity[name,job]
+``
 
 (denormalize the real_identity [but only fields name and job], collapse the with the identity prefix)
 
@@ -346,7 +360,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?@lookup=superhero.tag``
+``
+/superheroes/rest/api/superhero?@lookup=superhero.tag
+``
 
 OUTPUT:
 ``
@@ -443,7 +459,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?@lookup=superhero.tag.superpower``
+``
+/superheroes/rest/api/superhero?@lookup=superhero.tag.superpower
+``
 
 OUTPUT:
 ``
@@ -570,7 +588,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?@lookup=powers:superhero.tag[strength].superpower[description]``
+``
+/superheroes/rest/api/superhero?@lookup=powers:superhero.tag[strength].superpower[description]
+``
 
 OUTPUT:
 ``
@@ -667,7 +687,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?@lookup=powers!:superhero.tag[strength].superpower[description]``
+``
+/superheroes/rest/api/superhero?@lookup=powers!:superhero.tag[strength].superpower[description]
+``
 
 OUTPUT:
 ``
@@ -744,7 +766,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?@lookup=powers!:superhero.tag[strength].superpower[description],identity!:real_identity[name]``
+``
+/superheroes/rest/api/superhero?@lookup=powers!:superhero.tag[strength].superpower[description],identity!:real_identity[name]
+``
 
 OUTPUT:
 ``
@@ -821,7 +845,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?name.eq=Superman``
+``
+/superheroes/rest/api/superhero?name.eq=Superman
+``
 
 OUTPUT:
 ``
@@ -842,7 +868,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?real_identity.name.eq=Clark Kent``
+``
+/superheroes/rest/api/superhero?real_identity.name.eq=Clark Kent
+``
 
 OUTPUT:
 ``
@@ -863,7 +891,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?not.real_identity.name.eq=Clark Kent``
+``
+/superheroes/rest/api/superhero?not.real_identity.name.eq=Clark Kent
+``
 
 OUTPUT:
 ``
@@ -889,7 +919,9 @@ OUTPUT:
 ``
 
 URL:
-``/superheroes/rest/api.json/superhero?superhero.tag.superpower.description=Flight``
+``
+/superheroes/rest/api/superhero?superhero.tag.superpower.description=Flight
+``
 
 OUTPUT:
 ``
@@ -926,7 +958,7 @@ and some optional fields:
 {
     "count": ... (total matching, not total returned, for GET)
     "items": ... (in response to a GET)
-    "errors: ... (usually validation error0
+    "errors": ... (usually validation error0
     "models": ... (usually if status != success)
     "message": ... (is if error)
 }

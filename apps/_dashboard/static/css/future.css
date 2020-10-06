@@ -134,6 +134,7 @@ input[type=date],
 input[type=time], 
 input[type=datetime-local],
 input[type=file], 
+select,
 textarea {
    background-color: black;
    border: 0;
@@ -147,6 +148,7 @@ input[type=number],
 input[type=date], 
 input[type=time], 
 input[type=datetime-local],
+select,
 textarea {
    border-bottom: 2px solid #33BFFF;
 }
@@ -166,7 +168,7 @@ label {
 .my-effects .accordion>input {display:none}
 .my-effects .accordion>input:checked ~ *:not(label) {
   padding-top: 10px;
-  max-height: 1000px !important;
+  max-height: 10000px !important;
   overflow:hidden !important;
   -webkit-transition: max-height .3s ease-in;
   transition: max-height .3s ease-in;

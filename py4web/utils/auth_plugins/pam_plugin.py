@@ -1,10 +1,10 @@
-from . pam import authenticate
+from .pam import authenticate
 
 
 class PamPlugin:
 
-    name = 'pam'
+    name = "pam"
+    label = "Pam"
 
-    def validate_credentials(self, username, password):
+    def check_credentials(self, username, password):
         return authenticate(username, password)
-

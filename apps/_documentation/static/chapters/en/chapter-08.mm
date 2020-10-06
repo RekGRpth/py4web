@@ -26,7 +26,7 @@ attributes = {'_id':'123', '_class':'myclass'}
 
 The following set of helpers:
 
-``A``, ``BEAUTIFY``, ``BODY``, ``CAT``, ``CODE``, ``DIV``, ``EM``, ``FORM``, ``H1``, ``H2``, ``H3``, ``H4``, ``H5``, ``H6``, ``HEAD``, ``HTML``, ``I``, ``IMG``, ``INPUT``, ``LABEL``, ``LI``, ``LINK``, ``META``, ``METATAG``, ``OL``, ``OPTION``, ``PRE``, ``SELECT``, ``SPAN``, ``STRONG``, ``TABLE``, ``TAG``, ``TBODY``, ``TD``, ``TEXTAREA``, ``TH``, ``THAED``, ``TR``, ``UL``, ``XML``, ``sanitize``, ``xmlescape``
+``A``, ``BEAUTIFY``, ``BODY``, ``CAT``, ``CODE``, ``DIV``, ``EM``, ``FORM``, ``H1``, ``H2``, ``H3``, ``H4``, ``H5``, ``H6``, ``HEAD``, ``HTML``, ``I``, ``IMG``, ``INPUT``, ``LABEL``, ``LI``, ``LINK``, ``META``, ``METATAG``, ``OL``, ``OPTION``, ``PRE``, ``SELECT``, ``SPAN``, ``STRONG``, ``TABLE``, ``TAG``, ``TBODY``, ``TD``, ``TEXTAREA``, ``TH``, ``THEAD``, ``TR``, ``UL``, ``XML``, ``sanitize``, ``xmlescape``
 
 can be used to build complex expressions that can then be serialized to XML``xml-w``:cite ``xml-o``:cite. For example:
 ``
@@ -103,6 +103,7 @@ Note that more elaborate entries will introduce HTML character entities, but the
 <div data-options="{&quot;mode&quot;:&quot;calbox&quot;, &quot;useNewStyle&quot;:true}">text</div>
 ``:python
 
+[[TAGs]]
 You can also dynamically create special TAGs:
 
 ``
@@ -243,14 +244,6 @@ CODE(..., styles={'CODE':'margin: 0;padding: 5px;border: none;'})
 
 The ``styles`` attribute must be a dictionary, and it allows two possible keys: ``CODE`` for the style of the actual code, and ``LINENUMBERS`` for the style of the left column, which contains the line numbers. Mind that these styles completely replace the default styles and are not simply added to them.
 
-#### ``COL``
-``COL``:inxx
-
-``
->>> print COL('a', 'b')
-<col>ab</col>
-``:python
-
 #### ``DIV``
 ``DIV``:inxx
 
@@ -271,19 +264,10 @@ Emphasizes its content.
 <em id="0" class="test">&lt;hello&gt;<b>world</b></em>
 ``:python
 
-#### ``FIELDSET``
-``FIELDSET``:inxx
-
-This is used to create an input field together with its label.
-``
->>> print FIELDSET('Height:', INPUT(_name='height'), _class='test')
-<fieldset class="test">Height:<input name="height" /></fieldset>
-``:python
-
 #### ``FORM``
 ``FORM``:inxx
 
-This is one of the most important helpers. In its simple form, it just makes a ``<form>...</form>`` tag, but because helpers are objects and have knowledge of what they contain, they can process submitted forms (for example, perform validation of the fields). This will be discussed in detail in Chapter 7.
+This is one of the most important helpers. In its simple form, it just makes a ``<form>...</form>`` tag, but because helpers are objects and have knowledge of what they contain, they can process submitted forms (for example, perform validation of the fields). This will be discussed in detail in [Chapter 10](#chapter-10).
 ``
 >>> print FORM(INPUT(_type='submit'), _action='', _method='post')
 <form enctype="multipart/form-data" action="" method="post">
@@ -412,16 +396,6 @@ It is used to create a LABEL tag for an INPUT field.
 ``
 >>> print LABEL('<hello>', XML('<b>world</b>'), _class='test', _id=0)
 <label id="0" class="test">&lt;hello&gt;<b>world</b></label>
-``:python
-
-#### ``LEGEND``
-``LEGEND``:inxx
-
-It is used to create a legend tag for a field in a form.
-
-``
->>> print LEGEND('Name', _for='myfield')
-<legend for="myfield">Name</legend>
 ``:python
 
 #### ``LI``
@@ -683,7 +657,7 @@ Notice that ``TAG`` is an object, and ``TAG.name`` or ``TAG['name']`` is a funct
 #### ``MENU``
 ``MENU``:inxx
 
-The MENU helper takes a list of lists or of tuples of the form of ``response.menu`` (as described in Chapter 4) and generates a tree-like structure using unordered lists representing the menu. For example:
+The MENU helper takes a list of lists or of tuples of the form of ``response.menu`` and generates a tree-like structure using unordered lists representing the menu. For example:
 ``
 >>> print MENU([['One', False, 'link1'], ['Two', False, 'link2']])
 <ul class="py4web-menu py4web-menu-vertical">
